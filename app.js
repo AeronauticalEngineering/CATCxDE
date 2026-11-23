@@ -1,5 +1,5 @@
 // ⚠️ นำ URL ที่ได้จากการ Deploy Google Apps Script มาวางตรงนี้
-const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbwFYFHgK609jm3aL6sY9OVu4_EO_qNuEmXjQVe6rnZlfS4dSDWWrtZuqCrzcj2Ns-iTmg/exec';
+const GAS_API_URL = 'https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec';
 
 let allTorItems = [];
 let filteredTorItems = [];
@@ -7,15 +7,20 @@ let activeFilteredIndex = 0;
 let currentImageIndex = 0;
 let selectedStatus = '';
 
-// เริ่มทำงานเมื่อโหลดหน้าเว็บ
 document.addEventListener('DOMContentLoaded', () => {
   fetchTorData();
 
   document.getElementById('statusFilter').addEventListener('change', applyFilters);
   document.getElementById('searchInput').addEventListener('input', applyFilters);
+
+  // รองรับปุ่มลัดคีย์บอร์ดซ้าย/ขวา สำหรับเลื่อนรูป
+  document.addEventListener('keydown', (e) => {
+    if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
+    if (e.key === 'ArrowLeft') changeImage(-1);
+    if (e.key === 'ArrowRight') changeImage(1);
+  });
 });
 
-// ดึงข้อมูลจาก Google Apps Script
 async function fetchTorData() {
   const btnRefresh = document.getElementById('btnRefresh');
   btnRefresh.innerHTML = '<i class="bi bi-arrow-clockwise animate-spin"></i> กำลังโหลด...';
@@ -36,23 +41,19 @@ async function fetchTorData() {
   } catch (error) {
     console.error('Error:', error);
     document.getElementById('torListContainer').innerHTML = `
-      <div class="p-4 rounded-xl bg-red-50 text-red-600 text-sm text-center">
-        <i class="bi bi-exclamation-triangle-fill mr-1"></i> เกิดข้อผิดพลาดในการโหลดข้อมูล: ${error.message}<br>
-        <span class="text-xs text-red-500">ตรวจสอบว่าได้ตั้งค่า GAS_API_URL ถูกต้อง และ Deploy เป็น "ทุกคน (Anyone)" แล้ว</span>
+      <div class="p-3 rounded-xl bg-red-50 text-red-600 text-xs text-center">
+        <i class="bi bi-exclamation-triangle-fill mr-1"></i> โหลดข้อมูลไม่สำเร็จ: ${error.message}
       </div>`;
   } finally {
-    btnRefresh.innerHTML = '<i class="bi bi-arrow-clockwise"></i> รีเฟรชข้อมูล';
+    btnRefresh.innerHTML = '<i class="bi bi-arrow-clockwise"></i> รีเฟรช';
     btnRefresh.disabled = false;
   }
 }
 
-// อัปเดตตัวเลขสถิติและ Progress Bar ด้านบน
 function updateSummaryStats(totalDriveImages = 0) {
   const total = allTorItems.length;
   const reviewed = allTorItems.filter(item => item.status === 'ผ่าน' || item.status === 'ไม่ผ่าน').length;
   const percent = total > 0 ? Math.round((reviewed / total) * 100) : 0;
-
-  // นับจำนวนรูปภาพทั้งหมดที่ผูกไว้ใน TOR หรือจำนวนรูปใน Drive
   const linkedImagesCount = allTorItems.reduce((sum, item) => sum + item.images.length, 0);
 
   document.getElementById('statTotalTor').textContent = total;
@@ -62,7 +63,6 @@ function updateSummaryStats(totalDriveImages = 0) {
   document.getElementById('progressBar').style.width = `${percent}%`;
 }
 
-// กรองรายการตามสถานะและคำค้นหา
 function applyFilters(resetIndex = false) {
   const filterValue = document.getElementById('statusFilter').value;
   const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
@@ -89,33 +89,31 @@ function applyFilters(resetIndex = false) {
   renderActiveTorDetail();
 }
 
-// แสดงรายการ TOR ในกล่องเลือก
 function renderTorList() {
   const container = document.getElementById('torListContainer');
 
   if (filteredTorItems.length === 0) {
-    container.innerHTML = `<div class="text-center py-6 text-slate-400 text-sm">ไม่พบรายการ TOR ตามเงื่อนไขที่เลือก</div>`;
+    container.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs">ไม่พบรายการ TOR ตามเงื่อนไข</div>`;
     return;
   }
 
   container.innerHTML = filteredTorItems.map((item, index) => {
     const isActive = index === activeFilteredIndex;
-    
-    // Badge สถานะด้านขวา
-    let statusBadge = `<span class="text-xs text-slate-400 flex items-center gap-1">รอตรวจ <i class="bi bi-chevron-right"></i></span>`;
+
+    let statusBadge = `<span class="text-[11px] text-slate-400 flex items-center gap-0.5">รอตรวจ <i class="bi bi-chevron-right text-[10px]"></i></span>`;
     if (item.status === 'ผ่าน') {
-      statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-600 border border-emerald-200">ผ่าน</span>`;
+      statusBadge = `<span class="px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-600 border border-emerald-200">ผ่าน</span>`;
     } else if (item.status === 'ไม่ผ่าน') {
-      statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-50 text-rose-600 border border-rose-200">ไม่ผ่าน</span>`;
+      statusBadge = `<span class="px-2 py-0.5 rounded-full text-[11px] font-medium bg-rose-50 text-rose-600 border border-rose-200">ไม่ผ่าน</span>`;
     }
 
     return `
-      <div onclick="selectTor(${index})" 
-        class="cursor-pointer p-3.5 rounded-xl border transition flex items-center justify-between gap-3
-        ${isActive ? 'bg-blue-50/70 border-blue-400 shadow-xs' : 'bg-white border-slate-200/80 hover:border-slate-300 hover:bg-slate-50/50'}">
+      <div id="tor-row-${index}" onclick="selectTor(${index})"
+        class="cursor-pointer px-3 py-2 rounded-xl border transition flex items-center justify-between gap-2.5
+        ${isActive ? 'bg-blue-50/80 border-blue-400' : 'bg-white border-slate-200/70 hover:border-slate-300 hover:bg-slate-50/60'}">
         <div class="min-w-0 flex-1">
-          <div class="font-prompt font-semibold text-sm ${isActive ? 'text-blue-600' : 'text-slate-900'}">${item.tor_id}</div>
-          <div class="text-xs text-slate-500 truncate mt-0.5">${item.description}</div>
+          <div class="font-prompt font-semibold text-xs ${isActive ? 'text-blue-600' : 'text-slate-900'}">${item.tor_id}</div>
+          <div class="text-[11px] text-slate-500 truncate">${item.description}</div>
         </div>
         <div class="shrink-0">${statusBadge}</div>
       </div>
@@ -123,7 +121,6 @@ function renderTorList() {
   }).join('');
 }
 
-// เลือกรายการ TOR
 function selectTor(index) {
   activeFilteredIndex = index;
   currentImageIndex = 0;
@@ -131,7 +128,6 @@ function selectTor(index) {
   renderActiveTorDetail();
 }
 
-// แสดงรายละเอียดและรูปภาพของ TOR ข้อที่กำลังตรวจ
 function renderActiveTorDetail() {
   const detailCard = document.getElementById('detailCard');
 
@@ -148,20 +144,17 @@ function renderActiveTorDetail() {
   document.getElementById('detailDescription').textContent = item.description;
   document.getElementById('detailImageCount').textContent = `${item.images.length} รูป`;
 
-  // ตั้งค่าสถานะและหมายเหตุเดิม
   selectStatus(item.status || '');
   document.getElementById('remarkInput').value = item.remark || '';
-  document.getElementById('lastUpdatedText').textContent = item.updated_at 
-    ? `บันทึกล่าสุดเมื่อ: ${item.updated_at}` 
-    : 'ยังไม่มีการบันทึกผลการตรวจในข้อนี้';
+  document.getElementById('lastUpdatedText').textContent = item.updated_at
+    ? `บันทึกล่าสุด: ${item.updated_at}`
+    : 'พร้อมบันทึกข้อมูลลง Google Sheets';
 
-  // ปุ่มข้อก่อนหน้า
   document.getElementById('btnPrevTor').disabled = activeFilteredIndex === 0;
 
   renderCurrentImage();
 }
 
-// แสดงรูปภาพปัจจุบันใน Viewer
 function renderCurrentImage() {
   const item = filteredTorItems[activeFilteredIndex];
   const images = item.images || [];
@@ -172,9 +165,9 @@ function renderCurrentImage() {
 
   if (images.length === 0) {
     viewer.innerHTML = `
-      <div class="text-center text-slate-400 p-6">
-        <i class="bi bi-image text-3xl mb-2 block"></i>
-        <span class="text-sm">ไม่มีรูปภาพหลักฐานระบุไว้ในข้อนี้</span>
+      <div class="text-center text-slate-400 p-4">
+        <i class="bi bi-image text-2xl mb-1 block"></i>
+        <span class="text-xs">ไม่มีรูปภาพหลักฐานระบุไว้ในข้อนี้</span>
       </div>`;
     nameLabel.textContent = 'ไม่มีรูปภาพ';
     paginationLabel.textContent = '0/0';
@@ -193,26 +186,25 @@ function renderCurrentImage() {
 
   if (currentImg.url) {
     viewer.innerHTML = `
-      <img src="${currentImg.url}" alt="${currentImg.name}" 
+      <img src="${currentImg.url}" alt="${currentImg.name}"
         onclick="openModal('${currentImg.url}')"
-        class="max-h-[450px] w-auto object-contain cursor-zoom-in transition hover:opacity-95"
-        onerror="this.parentElement.innerHTML='<div class=\\'p-6 text-center text-rose-500 text-sm\\'>ไม่สามารถโหลดรูปภาพได้ กรุณาตรวจสอบสิทธิ์การแชร์โฟลเดอร์ Google Drive</div>'">
-      <span class="absolute bottom-2 right-2 bg-black/60 text-white text-[11px] px-2.5 py-1 rounded-full pointer-events-none">
-        <i class="bi bi-zoom-in"></i> คลิกเพื่อขยาย
+        class="w-full h-full object-contain cursor-zoom-in transition hover:opacity-95"
+        onerror="this.parentElement.innerHTML='<div class=\\'p-4 text-center text-rose-500 text-xs\\'>ไม่สามารถโหลดรูปภาพได้ กรุณาตรวจสอบสิทธิ์โฟลเดอร์ Google Drive</div>'">
+      <span class="absolute bottom-2 right-2 bg-black/65 text-white text-[11px] px-2.5 py-0.5 rounded-full pointer-events-none">
+        <i class="bi bi-zoom-in"></i> ขยาย
       </span>`;
     btnOpenOriginal.href = currentImg.viewUrl;
     btnOpenOriginal.classList.remove('hidden');
   } else {
     viewer.innerHTML = `
-      <div class="text-center text-amber-600 p-6">
-        <i class="bi bi-file-earmark-x text-3xl mb-2 block"></i>
-        <span class="text-sm font-medium">ไม่พบไฟล์ "${currentImg.name}" ในโฟลเดอร์ Google Drive</span>
+      <div class="text-center text-amber-600 p-4">
+        <i class="bi bi-file-earmark-x text-2xl mb-1 block"></i>
+        <span class="text-xs font-medium">ไม่พบไฟล์ "${currentImg.name}" ใน Google Drive</span>
       </div>`;
     btnOpenOriginal.classList.add('hidden');
   }
 }
 
-// เลื่อนดูรูปก่อนหน้า / ถัดไป
 function changeImage(step) {
   const item = filteredTorItems[activeFilteredIndex];
   const newIndex = currentImageIndex + step;
@@ -222,31 +214,27 @@ function changeImage(step) {
   }
 }
 
-// เลือกปุ่ม ผ่าน / ไม่ผ่าน
 function selectStatus(status) {
   selectedStatus = status;
   const btnPass = document.getElementById('btnPass');
   const btnFail = document.getElementById('btnFail');
 
-  // รีเซ็ตสไตล์ปุ่ม
-  btnPass.className = 'flex items-center justify-center gap-2 py-2.5 px-4 rounded-full border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50 transition';
-  btnFail.className = 'flex items-center justify-center gap-2 py-2.5 px-4 rounded-full border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50 transition';
+  btnPass.className = 'flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-50 transition cursor-pointer';
+  btnFail.className = 'flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-50 transition cursor-pointer';
 
   if (status === 'ผ่าน') {
-    btnPass.className = 'flex items-center justify-center gap-2 py-2.5 px-4 rounded-full border-2 border-emerald-500 bg-emerald-50 text-sm font-semibold text-emerald-700 transition';
+    btnPass.className = 'flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border-2 border-emerald-500 bg-emerald-50 text-xs font-semibold text-emerald-700 transition cursor-pointer';
   } else if (status === 'ไม่ผ่าน') {
-    btnFail.className = 'flex items-center justify-center gap-2 py-2.5 px-4 rounded-full border-2 border-rose-500 bg-rose-50 text-sm font-semibold text-rose-700 transition';
+    btnFail.className = 'flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border-2 border-rose-500 bg-rose-50 text-xs font-semibold text-rose-700 transition cursor-pointer';
   }
 }
 
-// บันทึกผลลง Google Sheets และเลื่อนไปข้อถัดไป
 async function saveCurrentAndNext() {
   const item = filteredTorItems[activeFilteredIndex];
   const remark = document.getElementById('remarkInput').value.trim();
   const btnSave = document.getElementById('btnSaveAndNext');
   const saveBtnText = document.getElementById('saveBtnText');
 
-  // หากไม่ได้เลือกสถานะใดๆ เลย ให้เลื่อนไปข้อถัดไปเฉยๆ
   if (!selectedStatus && !remark) {
     navigateTor(1);
     return;
@@ -256,7 +244,6 @@ async function saveCurrentAndNext() {
   saveBtnText.textContent = 'กำลังบันทึก...';
 
   try {
-    // ใช้ text/plain เพื่อหลีกเลี่ยง CORS Preflight (OPTIONS) ของ Google Apps Script
     const response = await fetch(GAS_API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -270,19 +257,17 @@ async function saveCurrentAndNext() {
     const result = await response.json();
     if (!result.success) throw new Error(result.error);
 
-    // อัปเดตข้อมูลในหน่วยความจำทันทีโดยไม่ต้องโหลดใหม่ทั้งหน้า
     item.status = selectedStatus;
     item.remark = remark;
     item.updated_at = result.updated_at;
 
     updateSummaryStats();
-    
-    // เลื่อนไปข้อถัดไปอัตโนมัติ (ถ้ายังไม่ถึงข้อสุดท้าย)
+
     if (activeFilteredIndex < filteredTorItems.length - 1) {
       activeFilteredIndex++;
       currentImageIndex = 0;
     }
-    
+
     renderTorList();
     renderActiveTorDetail();
 
@@ -294,7 +279,6 @@ async function saveCurrentAndNext() {
   }
 }
 
-// เลื่อนข้อ TOR ก่อนหน้า / ถัดไป
 function navigateTor(step) {
   const newIndex = activeFilteredIndex + step;
   if (newIndex >= 0 && newIndex < filteredTorItems.length) {
@@ -305,7 +289,6 @@ function navigateTor(step) {
   }
 }
 
-// เปิด-ปิด Modal ขยายรูป
 function openModal(imgUrl) {
   document.getElementById('modalImg').src = imgUrl;
   const modal = document.getElementById('imageModal');
