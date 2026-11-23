@@ -1,11 +1,13 @@
-// ⚠️ นำ URL ที่ได้จากการ Deploy Google Apps Script มาวางตรงนี้
+
 const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbwFYFHgK609jm3aL6sY9OVu4_EO_qNuEmXjQVe6rnZlfS4dSDWWrtZuqCrzcj2Ns-iTmg/exec';
+// ⚠️ นำ URL ที่ได้จากการ Deploy Google Apps Script มาวางตรงนี้
 
 let allTorItems = [];
 let filteredTorItems = [];
 let activeFilteredIndex = 0;
 let currentImageIndex = 0;
 let selectedStatus = '';
+let isSaving = false;
 
 document.addEventListener('DOMContentLoaded', () => {
   fetchTorData();
@@ -13,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('statusFilter').addEventListener('change', applyFilters);
   document.getElementById('searchInput').addEventListener('input', applyFilters);
 
-  // รองรับปุ่มลัดคีย์บอร์ดซ้าย/ขวา สำหรับเลื่อนรูป
+  // ปุ่มลัดคีย์บอร์ดซ้าย/ขวา สำหรับเลื่อนรูป
   document.addEventListener('keydown', (e) => {
     if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
     if (e.key === 'ArrowLeft') changeImage(-1);
@@ -119,6 +121,11 @@ function renderTorList() {
       </div>
     `;
   }).join('');
+
+  const activeRow = document.getElementById(`tor-row-${activeFilteredIndex}`);
+  if (activeRow) {
+    activeRow.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
 }
 
 function selectTor(index) {
@@ -144,11 +151,11 @@ function renderActiveTorDetail() {
   document.getElementById('detailDescription').textContent = item.description;
   document.getElementById('detailImageCount').textContent = `${item.images.length} รูป`;
 
-  selectStatus(item.status || '');
+  applyStatusButtonStyle(item.status || '');
   document.getElementById('remarkInput').value = item.remark || '';
   document.getElementById('lastUpdatedText').textContent = item.updated_at
     ? `บันทึกล่าสุด: ${item.updated_at}`
-    : 'พร้อมบันทึกข้อมูลลง Google Sheets';
+    : 'กด "ผ่าน" เพื่อบันทึกและไปรูปถัดไปทันที';
 
   document.getElementById('btnPrevTor').disabled = activeFilteredIndex === 0;
 
@@ -214,7 +221,8 @@ function changeImage(step) {
   }
 }
 
-function selectStatus(status) {
+// อัปเดตหน้าตาปุ่ม ผ่าน / ไม่ผ่าน
+function applyStatusButtonStyle(status) {
   selectedStatus = status;
   const btnPass = document.getElementById('btnPass');
   const btnFail = document.getElementById('btnFail');
@@ -229,7 +237,74 @@ function selectStatus(status) {
   }
 }
 
+// กดปุ่ม "ผ่าน" -> บันทึกลง Google Sheets ทันที และเลื่อนไปรูปถัดไป (หรือข้อถัดไปเมื่อจบรูป)
+async function selectStatus(status) {
+  if (isSaving) return;
+
+  if (status === 'ไม่ผ่าน') {
+    applyStatusButtonStyle('ไม่ผ่าน');
+    return;
+  }
+
+  // กรณี status === 'ผ่าน'
+  applyStatusButtonStyle('ผ่าน');
+  const item = filteredTorItems[activeFilteredIndex];
+  const remark = document.getElementById('remarkInput').value.trim();
+  const btnPass = document.getElementById('btnPass');
+
+  isSaving = true;
+  btnPass.disabled = true;
+  document.getElementById('lastUpdatedText').textContent = 'กำลังบันทึกผล "ผ่าน"...';
+
+  try {
+    const response = await fetch(GAS_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        rowIndex: item.rowIndex,
+        status: 'ผ่าน',
+        remark: remark
+      })
+    });
+
+    const result = await response.json();
+    if (!result.success) throw new Error(result.error);
+
+    item.status = 'ผ่าน';
+    item.remark = remark;
+    item.updated_at = result.updated_at;
+
+    updateSummaryStats();
+    renderTorList();
+
+    // เช็คว่ายังมีรูปถัดไปใน TOR ข้อนี้หรือไม่
+    const hasNextImage = item.images && currentImageIndex < item.images.length - 1;
+    if (hasNextImage) {
+      currentImageIndex++;
+      renderCurrentImage();
+      document.getElementById('lastUpdatedText').textContent = `บันทึก "ผ่าน" แล้ว (${result.updated_at}) • ไปรูปที่ ${currentImageIndex + 1}/${item.images.length}`;
+    } else if (activeFilteredIndex < filteredTorItems.length - 1) {
+      // หากเป็นรูปสุดท้ายของข้อนี้ ให้ไป TOR ข้อถัดไป
+      activeFilteredIndex++;
+      currentImageIndex = 0;
+      renderTorList();
+      renderActiveTorDetail();
+    } else {
+      document.getElementById('lastUpdatedText').textContent = `บันทึก "ผ่าน" แล้ว (${result.updated_at}) • ครบทุกรายการแล้ว`;
+    }
+
+  } catch (error) {
+    alert('บันทึกข้อมูลไม่สำเร็จ: ' + error.message);
+  } finally {
+    isSaving = false;
+    btnPass.disabled = false;
+  }
+}
+
+// ปุ่ม "บันทึกและไปข้อถัดไป" (ใช้กรณีบันทึก "ไม่ผ่าน" + หมายเหตุ หรือบันทึกข้อปัจจุบันแล้วไปข้อถัดไป)
 async function saveCurrentAndNext() {
+  if (isSaving) return;
+
   const item = filteredTorItems[activeFilteredIndex];
   const remark = document.getElementById('remarkInput').value.trim();
   const btnSave = document.getElementById('btnSaveAndNext');
@@ -240,6 +315,7 @@ async function saveCurrentAndNext() {
     return;
   }
 
+  isSaving = true;
   btnSave.disabled = true;
   saveBtnText.textContent = 'กำลังบันทึก...';
 
@@ -274,6 +350,7 @@ async function saveCurrentAndNext() {
   } catch (error) {
     alert('บันทึกข้อมูลไม่สำเร็จ: ' + error.message);
   } finally {
+    isSaving = false;
     btnSave.disabled = false;
     saveBtnText.textContent = 'บันทึกและไปข้อถัดไป';
   }
