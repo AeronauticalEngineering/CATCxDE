@@ -1,5 +1,5 @@
-const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbwFYFHgK609jm3aL6sY9OVu4_EO_qNuEmXjQVe6rnZlfS4dSDWWrtZuqCrzcj2Ns-iTmg/exec';
 // ⚠️ นำ URL ที่ได้จากการ Deploy Google Apps Script มาวางตรงนี้
+const GAS_API_URL = 'https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec';
 
 let allTorItems = [];
 let filteredTorItems = [];
@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function fetchTorData() {
   const btnRefresh = document.getElementById('btnRefresh');
-  btnRefresh.innerHTML = '<i class="bi bi-arrow-clockwise animate-spin"></i> กำลังโหลด...';
+  btnRefresh.innerHTML = '<i class="bi bi-arrow-clockwise animate-spin"></i> <span class="hidden sm:inline">กำลังโหลด...</span>';
   btnRefresh.disabled = true;
 
   try {
@@ -46,7 +46,7 @@ async function fetchTorData() {
         <i class="bi bi-exclamation-triangle-fill mr-1"></i> โหลดข้อมูลไม่สำเร็จ: ${error.message}
       </div>`;
   } finally {
-    btnRefresh.innerHTML = '<i class="bi bi-arrow-clockwise"></i> รีเฟรช';
+    btnRefresh.innerHTML = '<i class="bi bi-arrow-clockwise"></i> <span class="hidden sm:inline">รีเฟรช</span>';
     btnRefresh.disabled = false;
   }
 }
@@ -92,6 +92,7 @@ function applyFilters(resetIndex = false) {
 
 function renderTorList() {
   const container = document.getElementById('torListContainer');
+  const prevScrollTop = container.scrollTop;
 
   if (filteredTorItems.length === 0) {
     container.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs">ไม่พบรายการ TOR ตามเงื่อนไข</div>`;
@@ -109,29 +110,36 @@ function renderTorList() {
     }
 
     return `
-      <div id="tor-row-${index}" onclick="selectTor(${index})"
+      <div id="tor-row-${index}" onclick="selectTor(${index}, true)"
         class="cursor-pointer px-3 py-2 rounded-xl border transition flex items-center justify-between gap-2.5
-        ${isActive ? 'bg-blue-50/80 border-blue-400' : 'bg-white border-slate-200/70 hover:border-slate-300 hover:bg-slate-50/60'}">
+        ${isActive
+          ? 'bg-blue-100/80 border-blue-500 border-l-4 border-l-blue-600 shadow-2xs'
+          : 'bg-white border-slate-200/70 hover:border-slate-300 hover:bg-slate-50/60'}">
         <div class="min-w-0 flex-1">
-          <div class="font-prompt font-semibold text-xs ${isActive ? 'text-blue-600' : 'text-slate-900'}">${item.tor_id}</div>
-          <div class="text-[11px] text-slate-500 truncate">${item.description}</div>
+          <div class="font-prompt font-semibold text-xs ${isActive ? 'text-blue-800' : 'text-slate-900'}">${item.tor_id}</div>
+          <div class="text-[11px] ${isActive ? 'text-blue-900/75 font-medium' : 'text-slate-500'} truncate">${item.description}</div>
         </div>
         <div class="shrink-0">${statusBadge}</div>
       </div>
     `;
   }).join('');
 
-  const activeRow = document.getElementById(`tor-row-${activeFilteredIndex}`);
-  if (activeRow) {
-    activeRow.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-  }
+  // คงตำแหน่ง Scroll ของรายการ TOR ไว้ ไม่ให้เด้งกลับไปด้านบน
+  container.scrollTop = prevScrollTop;
 }
 
-function selectTor(index) {
+function selectTor(index, scrollToDetailOnMobile = false) {
   activeFilteredIndex = index;
   currentImageIndex = 0;
   renderTorList();
   renderActiveTorDetail();
+
+  if (scrollToDetailOnMobile && window.innerWidth < 1024) {
+    const detailCard = document.getElementById('detailCard');
+    if (detailCard) {
+      detailCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
 }
 
 function renderActiveTorDetail() {
@@ -225,17 +233,17 @@ function applyStatusButtonStyle(status) {
   const btnPass = document.getElementById('btnPass');
   const btnFail = document.getElementById('btnFail');
 
-  btnPass.className = 'flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-50 transition cursor-pointer';
-  btnFail.className = 'flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-50 transition cursor-pointer';
+  btnPass.className = 'flex items-center justify-center gap-1.5 py-2.5 sm:py-2 px-3 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-slate-700 hover:bg-slate-50 transition cursor-pointer';
+  btnFail.className = 'flex items-center justify-center gap-1.5 py-2.5 sm:py-2 px-3 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-slate-700 hover:bg-slate-50 transition cursor-pointer';
 
   if (status === 'ผ่าน') {
-    btnPass.className = 'flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border-2 border-emerald-500 bg-emerald-50 text-xs font-semibold text-emerald-700 transition cursor-pointer';
+    btnPass.className = 'flex items-center justify-center gap-1.5 py-2.5 sm:py-2 px-3 rounded-xl border-2 border-emerald-500 bg-emerald-50 text-xs sm:text-sm font-semibold text-emerald-700 transition cursor-pointer';
   } else if (status === 'ไม่ผ่าน') {
-    btnFail.className = 'flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border-2 border-rose-500 bg-rose-50 text-xs font-semibold text-rose-700 transition cursor-pointer';
+    btnFail.className = 'flex items-center justify-center gap-1.5 py-2.5 sm:py-2 px-3 rounded-xl border-2 border-rose-500 bg-rose-50 text-xs sm:text-sm font-semibold text-rose-700 transition cursor-pointer';
   }
 }
 
-// กดปุ่ม "ผ่าน" -> บันทึกผล "ผ่าน" ของ TOR ข้อนี้ลง Google Sheets และไป TOR ข้อถัดไปทันที
+// กดปุ่ม "ผ่าน" -> บันทึกผล "ผ่าน" ลง Google Sheets และไป TOR ข้อถัดไปทันที โดยไม่เด้งกลับไปที่รายการ TOR
 async function selectStatus(status) {
   if (isSaving) return;
 
