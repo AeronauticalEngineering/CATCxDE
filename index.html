@@ -24,56 +24,56 @@
 </head>
 <body class="lg:h-screen lg:overflow-hidden flex flex-col bg-slate-50">
 
-  <!-- Top Bar (Compact) -->
-  <header class="bg-white border-b border-slate-200 px-4 lg:px-6 py-2.5 shrink-0 flex items-center justify-between gap-4">
-    <div class="flex items-center gap-3 min-w-0">
-      <h1 class="font-prompt text-lg font-bold text-slate-900 truncate">TOR Review</h1>
-      <span class="hidden sm:inline text-xs text-slate-400">|</span>
-      <p class="hidden sm:block text-xs text-slate-500 truncate">ระบบตรวจสอบข้อกำหนดและหลักฐานประกอบจาก Google Drive</p>
+  <!-- Top Bar -->
+  <header class="bg-white border-b border-slate-200 px-3 sm:px-4 lg:px-6 py-2.5 shrink-0 flex items-center justify-between gap-2 sm:gap-4">
+    <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+      <h1 class="font-prompt text-base sm:text-lg font-bold text-slate-900 truncate">TOR Review</h1>
+      <span class="hidden md:inline text-xs text-slate-300">|</span>
+      <p class="hidden md:block text-xs text-slate-500 truncate">ระบบตรวจสอบข้อกำหนดและหลักฐานประกอบจาก Google Drive</p>
     </div>
 
-    <div class="flex items-center gap-3 shrink-0">
-      <!-- Compact Progress in Header -->
-      <div class="hidden md:flex items-center gap-2.5 bg-slate-50 border border-slate-200/80 px-3 py-1 rounded-full">
-        <span class="text-xs text-slate-600">ความคืบหน้า</span>
-        <div class="w-24 h-2 bg-slate-200 rounded-full overflow-hidden">
+    <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+      <!-- Progress Bar (Visible on all screens, compact on mobile) -->
+      <div class="flex items-center gap-2 bg-slate-50 border border-slate-200/80 px-2.5 py-1 rounded-full">
+        <span class="hidden sm:inline text-xs text-slate-600">ความคืบหน้า</span>
+        <div class="w-16 sm:w-24 h-2 bg-slate-200 rounded-full overflow-hidden">
           <div id="progressBar" class="h-full bg-blue-600 rounded-full transition-all duration-300" style="width: 0%"></div>
         </div>
         <span id="progressPercent" class="font-prompt text-xs font-semibold text-slate-900">0%</span>
       </div>
 
-      <button id="btnRefresh" onclick="fetchTorData()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 transition cursor-pointer">
-        <i class="bi bi-arrow-clockwise"></i> รีเฟรช
+      <button id="btnRefresh" onclick="fetchTorData()" class="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 transition cursor-pointer">
+        <i class="bi bi-arrow-clockwise"></i> <span class="hidden sm:inline">รีเฟรช</span>
       </button>
     </div>
   </header>
 
-  <!-- Main 16:9 Workspace Grid -->
-  <main class="flex-1 min-h-0 max-w-[1600px] w-full mx-auto p-3 lg:p-4 grid grid-cols-1 lg:grid-cols-12 gap-4">
+  <!-- Main Workspace -->
+  <main class="flex-1 lg:min-h-0 max-w-[1600px] w-full mx-auto p-2.5 sm:p-3 lg:p-4 grid grid-cols-1 lg:grid-cols-12 gap-3 lg:gap-4">
 
     <!-- LEFT PANEL (4 cols): Stats + Filter + TOR List -->
-    <section class="lg:col-span-4 flex flex-col gap-3 min-h-0">
+    <section id="torListSection" class="lg:col-span-4 flex flex-col gap-2.5 sm:gap-3 lg:min-h-0">
       <!-- Compact Stats Card -->
-      <div class="bg-white rounded-2xl border border-slate-200/90 shadow-xs px-4 py-3 shrink-0">
+      <div class="bg-white rounded-2xl border border-slate-200/90 shadow-xs px-3 sm:px-4 py-2.5 sm:py-3 shrink-0">
         <div class="grid grid-cols-3 divide-x divide-slate-100 text-center">
           <div>
-            <div id="statTotalTor" class="font-prompt text-xl font-bold text-slate-900 leading-tight">-</div>
+            <div id="statTotalTor" class="font-prompt text-lg sm:text-xl font-bold text-slate-900 leading-tight">-</div>
             <div class="text-[11px] text-slate-500">TOR ทั้งหมด</div>
           </div>
           <div>
-            <div id="statTotalImages" class="font-prompt text-xl font-bold text-slate-900 leading-tight">-</div>
+            <div id="statTotalImages" class="font-prompt text-lg sm:text-xl font-bold text-slate-900 leading-tight">-</div>
             <div class="text-[11px] text-slate-500">รูปภาพ</div>
           </div>
           <div>
-            <div id="statReviewed" class="font-prompt text-xl font-bold text-slate-900 leading-tight">-/-</div>
+            <div id="statReviewed" class="font-prompt text-lg sm:text-xl font-bold text-slate-900 leading-tight">-/-</div>
             <div class="text-[11px] text-slate-500">ตรวจแล้ว</div>
           </div>
         </div>
       </div>
 
-      <!-- TOR List Card (Fills remaining height on desktop) -->
-      <div class="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-3.5 flex flex-col flex-1 min-h-[260px] lg:min-h-0">
-        <div class="flex items-center justify-between gap-2 mb-2.5 shrink-0">
+      <!-- TOR List Card -->
+      <div class="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-3 sm:p-3.5 flex flex-col lg:flex-1 lg:min-h-0">
+        <div class="flex items-center justify-between gap-2 mb-2 shrink-0">
           <span class="font-prompt font-semibold text-sm text-slate-800">รายการ TOR</span>
           <select id="statusFilter" class="px-2.5 py-1 text-xs border border-slate-200 rounded-lg bg-slate-50 font-medium text-slate-700 focus:outline-none focus:border-blue-500 cursor-pointer">
             <option value="all">ทั้งหมด</option>
@@ -83,14 +83,14 @@
           </select>
         </div>
 
-        <div class="relative mb-2.5 shrink-0">
+        <div class="relative mb-2 shrink-0">
           <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
           <input type="text" id="searchInput" placeholder="ค้นหารหัสหรือข้อความ..."
             class="w-full pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
         </div>
 
-        <div id="torListContainer" class="space-y-1.5 overflow-y-auto flex-1 pr-0.5">
-          <div class="text-center py-8 text-slate-400 text-xs">
+        <div id="torListContainer" class="space-y-1.5 max-h-48 sm:max-h-56 lg:max-h-none overflow-y-auto lg:flex-1 pr-0.5">
+          <div class="text-center py-6 text-slate-400 text-xs">
             <div class="inline-block animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent mb-2"></div>
             <div>กำลังโหลดข้อมูล...</div>
           </div>
@@ -99,27 +99,27 @@
     </section>
 
     <!-- RIGHT PANEL (8 cols): Active TOR Detail + Large Image + Inspection Controls -->
-    <section id="detailCard" class="lg:col-span-8 bg-white rounded-2xl border border-slate-200/90 shadow-xs p-4 flex flex-col min-h-0 hidden">
+    <section id="detailCard" class="lg:col-span-8 bg-white rounded-2xl border border-slate-200/90 shadow-xs p-3 sm:p-4 flex flex-col lg:min-h-0 hidden">
       
-      <!-- TOR Header & Description -->
-      <div class="shrink-0 mb-2.5">
-        <div class="flex items-center justify-between gap-2 mb-1">
-          <h2 id="detailTorId" class="font-prompt text-base lg:text-lg font-bold text-slate-900">TOR -</h2>
-          <div class="flex items-center gap-2 shrink-0">
-            <span id="detailImageCount" class="text-xs text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">0 รูป</span>
-            <span id="detailIndexBadge" class="text-xs font-medium text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full">0 / 0</span>
+      <!-- Highlighted Active TOR Header & Description -->
+      <div class="shrink-0 mb-2.5 bg-blue-50/75 border border-blue-200/80 border-l-4 border-l-blue-600 rounded-xl px-3 py-2">
+        <div class="flex items-center justify-between gap-2 mb-0.5">
+          <h2 id="detailTorId" class="font-prompt text-sm sm:text-base lg:text-lg font-bold text-blue-900">TOR -</h2>
+          <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <span id="detailImageCount" class="text-[11px] sm:text-xs font-medium text-slate-600 bg-white/90 border border-slate-200/80 px-2 py-0.5 rounded-full">0 รูป</span>
+            <span id="detailIndexBadge" class="text-[11px] sm:text-xs font-semibold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">0 / 0</span>
           </div>
         </div>
-        <p id="detailDescription" class="text-xs lg:text-sm text-slate-700 leading-snug line-clamp-2 lg:line-clamp-3">-</p>
+        <p id="detailDescription" class="text-xs sm:text-sm text-slate-800 font-medium leading-snug line-clamp-2 lg:line-clamp-3">-</p>
       </div>
 
-      <!-- Middle Zone: Image Viewer (Takes flexible height) -->
-      <div class="flex-1 min-h-[240px] lg:min-h-0 bg-slate-50 border border-slate-200/80 rounded-xl p-2.5 flex flex-col">
+      <!-- Middle Zone: Image Viewer -->
+      <div class="h-[240px] sm:h-[320px] lg:h-auto lg:flex-1 lg:min-h-0 bg-slate-50 border border-slate-200/80 rounded-xl p-2 sm:p-2.5 flex flex-col">
         <div id="imageViewerContainer" class="relative flex-1 min-h-0 flex items-center justify-center bg-white rounded-lg border border-slate-100 overflow-hidden">
           <!-- Image injected by JS -->
         </div>
 
-        <!-- Compact Image Controls Bar -->
+        <!-- Image Controls Bar -->
         <div class="pt-2 flex items-center justify-between gap-2 shrink-0">
           <div class="flex items-center gap-1.5 min-w-0">
             <span id="currentImageName" class="font-prompt font-medium text-xs text-slate-700 truncate">-</span>
@@ -128,29 +128,29 @@
             </a>
           </div>
 
-          <div class="flex items-center gap-2 shrink-0">
-            <button id="btnPrevImg" onclick="changeImage(-1)" class="inline-flex items-center gap-1 px-3 py-1 rounded-full border border-slate-200 bg-white text-xs text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:pointer-events-none transition cursor-pointer">
+          <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <button id="btnPrevImg" onclick="changeImage(-1)" class="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1 rounded-full border border-slate-200 bg-white text-xs text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:pointer-events-none transition cursor-pointer">
               <i class="bi bi-chevron-left text-[10px]"></i> ก่อนหน้า
             </button>
             <span id="imagePagination" class="text-xs font-medium text-slate-600 min-w-[34px] text-center">0/0</span>
-            <button id="btnNextImg" onclick="changeImage(1)" class="inline-flex items-center gap-1 px-3 py-1 rounded-full border border-slate-200 bg-white text-xs text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:pointer-events-none transition cursor-pointer">
+            <button id="btnNextImg" onclick="changeImage(1)" class="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1 rounded-full border border-slate-200 bg-white text-xs text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:pointer-events-none transition cursor-pointer">
               ถัดไป <i class="bi bi-chevron-right text-[10px]"></i>
             </button>
           </div>
         </div>
       </div>
 
-      <!-- Bottom Evaluation & Action Bar (Compact) -->
+      <!-- Bottom Evaluation & Action Bar -->
       <div class="pt-2.5 shrink-0">
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-2.5 items-center mb-2">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-2 sm:gap-2.5 items-center mb-2">
           <!-- Pass / Fail Buttons -->
           <div class="md:col-span-4 grid grid-cols-2 gap-2">
             <button type="button" id="btnPass" onclick="selectStatus('ผ่าน')"
-              class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-50 transition cursor-pointer">
+              class="flex items-center justify-center gap-1.5 py-2.5 sm:py-2 px-3 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-slate-700 hover:bg-slate-50 transition cursor-pointer">
               <i class="bi bi-check-circle text-sm"></i> ผ่าน
             </button>
             <button type="button" id="btnFail" onclick="selectStatus('ไม่ผ่าน')"
-              class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-50 transition cursor-pointer">
+              class="flex items-center justify-center gap-1.5 py-2.5 sm:py-2 px-3 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-slate-700 hover:bg-slate-50 transition cursor-pointer">
               <i class="bi bi-x-circle text-sm"></i> ไม่ผ่าน
             </button>
           </div>
@@ -158,23 +158,23 @@
           <!-- Remark Input -->
           <div class="md:col-span-8">
             <input type="text" id="remarkInput" placeholder="บันทึกข้อสังเกตหรือสิ่งที่ต้องแก้ไข..."
-              class="w-full px-3.5 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+              class="w-full px-3.5 py-2.5 sm:py-2 text-xs sm:text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
           </div>
         </div>
 
         <!-- Navigation & Save Row -->
         <div class="flex items-center justify-between gap-2">
           <button type="button" id="btnPrevTor" onclick="navigateTor(-1)"
-            class="inline-flex items-center justify-center gap-1.5 py-2 px-4 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40 transition cursor-pointer">
+            class="inline-flex items-center justify-center gap-1.5 py-2 px-3.5 sm:px-4 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40 transition cursor-pointer">
             <i class="bi bi-arrow-left"></i> ข้อก่อนหน้า
           </button>
 
-          <span id="lastUpdatedText" class="hidden sm:inline text-[11px] text-slate-400 truncate">
+          <span id="lastUpdatedText" class="hidden xl:inline text-[11px] text-slate-400 truncate">
             พร้อมบันทึกข้อมูลลง Google Sheets
           </span>
 
           <button type="button" id="btnSaveAndNext" onclick="saveCurrentAndNext()"
-            class="inline-flex items-center justify-center gap-1.5 py-2 px-5 rounded-xl bg-slate-900 text-white text-xs font-medium hover:bg-slate-800 transition shadow-xs cursor-pointer">
+            class="inline-flex items-center justify-center gap-1.5 py-2 px-4 sm:px-5 rounded-xl bg-slate-900 text-white text-xs font-medium hover:bg-slate-800 transition shadow-xs cursor-pointer">
             <span id="saveBtnText">บันทึกและไปข้อถัดไป</span> <i class="bi bi-arrow-right"></i>
           </button>
         </div>
@@ -185,11 +185,11 @@
   </main>
 
   <!-- Fullscreen Image Zoom Modal -->
-  <div id="imageModal" class="fixed inset-0 z-50 bg-black/85 hidden items-center justify-center p-4" onclick="closeModal()">
-    <button class="absolute top-4 right-4 text-white/80 hover:text-white text-3xl cursor-pointer" onclick="closeModal()">
+  <div id="imageModal" class="fixed inset-0 z-50 bg-black/85 hidden items-center justify-center p-3 sm:p-4" onclick="closeModal()">
+    <button class="absolute top-3 right-3 sm:top-4 sm:right-4 text-white/80 hover:text-white text-2xl sm:text-3xl cursor-pointer" onclick="closeModal()">
       <i class="bi bi-x-lg"></i>
     </button>
-    <img id="modalImg" src="" alt="Preview" class="max-w-full max-h-[92vh] rounded-lg shadow-2xl object-contain" onclick="event.stopPropagation()">
+    <img id="modalImg" src="" alt="Preview" class="max-w-full max-h-[90vh] rounded-lg shadow-2xl object-contain" onclick="event.stopPropagation()">
   </div>
 
   <script src="app.js"></script>
