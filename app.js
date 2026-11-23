@@ -1,4 +1,3 @@
-
 const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbwFYFHgK609jm3aL6sY9OVu4_EO_qNuEmXjQVe6rnZlfS4dSDWWrtZuqCrzcj2Ns-iTmg/exec';
 // ⚠️ นำ URL ที่ได้จากการ Deploy Google Apps Script มาวางตรงนี้
 
@@ -15,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('statusFilter').addEventListener('change', applyFilters);
   document.getElementById('searchInput').addEventListener('input', applyFilters);
 
-  // ปุ่มลัดคีย์บอร์ดซ้าย/ขวา สำหรับเลื่อนรูป
+  // ปุ่มลัดคีย์บอร์ดซ้าย/ขวา สำหรับเลื่อนรูปในข้อปัจจุบัน
   document.addEventListener('keydown', (e) => {
     if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
     if (e.key === 'ArrowLeft') changeImage(-1);
@@ -155,7 +154,7 @@ function renderActiveTorDetail() {
   document.getElementById('remarkInput').value = item.remark || '';
   document.getElementById('lastUpdatedText').textContent = item.updated_at
     ? `บันทึกล่าสุด: ${item.updated_at}`
-    : 'กด "ผ่าน" เพื่อบันทึกและไปรูปถัดไปทันที';
+    : 'กด "ผ่าน" เพื่อบันทึกและไป TOR ข้อถัดไปทันที';
 
   document.getElementById('btnPrevTor').disabled = activeFilteredIndex === 0;
 
@@ -221,7 +220,6 @@ function changeImage(step) {
   }
 }
 
-// อัปเดตหน้าตาปุ่ม ผ่าน / ไม่ผ่าน
 function applyStatusButtonStyle(status) {
   selectedStatus = status;
   const btnPass = document.getElementById('btnPass');
@@ -237,7 +235,7 @@ function applyStatusButtonStyle(status) {
   }
 }
 
-// กดปุ่ม "ผ่าน" -> บันทึกลง Google Sheets ทันที และเลื่อนไปรูปถัดไป (หรือข้อถัดไปเมื่อจบรูป)
+// กดปุ่ม "ผ่าน" -> บันทึกผล "ผ่าน" ของ TOR ข้อนี้ลง Google Sheets และไป TOR ข้อถัดไปทันที
 async function selectStatus(status) {
   if (isSaving) return;
 
@@ -246,7 +244,6 @@ async function selectStatus(status) {
     return;
   }
 
-  // กรณี status === 'ผ่าน'
   applyStatusButtonStyle('ผ่าน');
   const item = filteredTorItems[activeFilteredIndex];
   const remark = document.getElementById('remarkInput').value.trim();
@@ -275,21 +272,14 @@ async function selectStatus(status) {
     item.updated_at = result.updated_at;
 
     updateSummaryStats();
-    renderTorList();
 
-    // เช็คว่ายังมีรูปถัดไปใน TOR ข้อนี้หรือไม่
-    const hasNextImage = item.images && currentImageIndex < item.images.length - 1;
-    if (hasNextImage) {
-      currentImageIndex++;
-      renderCurrentImage();
-      document.getElementById('lastUpdatedText').textContent = `บันทึก "ผ่าน" แล้ว (${result.updated_at}) • ไปรูปที่ ${currentImageIndex + 1}/${item.images.length}`;
-    } else if (activeFilteredIndex < filteredTorItems.length - 1) {
-      // หากเป็นรูปสุดท้ายของข้อนี้ ให้ไป TOR ข้อถัดไป
+    if (activeFilteredIndex < filteredTorItems.length - 1) {
       activeFilteredIndex++;
       currentImageIndex = 0;
       renderTorList();
       renderActiveTorDetail();
     } else {
+      renderTorList();
       document.getElementById('lastUpdatedText').textContent = `บันทึก "ผ่าน" แล้ว (${result.updated_at}) • ครบทุกรายการแล้ว`;
     }
 
@@ -301,7 +291,6 @@ async function selectStatus(status) {
   }
 }
 
-// ปุ่ม "บันทึกและไปข้อถัดไป" (ใช้กรณีบันทึก "ไม่ผ่าน" + หมายเหตุ หรือบันทึกข้อปัจจุบันแล้วไปข้อถัดไป)
 async function saveCurrentAndNext() {
   if (isSaving) return;
 
