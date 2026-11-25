@@ -1,5 +1,5 @@
 // ⚠️ นำ URL ที่ได้จากการ Deploy Google Apps Script มาวางตรงนี้
-const GAS_API_URL = 'https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec';
+const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbwFYFHgK609jm3aL6sY9OVu4_EO_qNuEmXjQVe6rnZlfS4dSDWWrtZuqCrzcj2Ns-iTmg/exec';
 const REQUIRED_PIN = 'aero11';
 
 let allTorItems = [];
