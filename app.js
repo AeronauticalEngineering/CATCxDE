@@ -1,5 +1,6 @@
 // ⚠️ นำ URL ที่ได้จากการ Deploy Google Apps Script มาวางตรงนี้
-const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbwFYFHgK609jm3aL6sY9OVu4_EO_qNuEmXjQVe6rnZlfS4dSDWWrtZuqCrzcj2Ns-iTmg/exec';
+const GAS_API_URL = 'https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec';
+const REQUIRED_PIN = 'aero11';
 
 let allTorItems = [];
 let filteredTorItems = [];
@@ -7,20 +8,99 @@ let activeFilteredIndex = 0;
 let currentImageIndex = 0;
 let selectedStatus = '';
 let isSaving = false;
+let isEditUnlocked = false;
+let unlockedPin = '';
 
 document.addEventListener('DOMContentLoaded', () => {
+  applyLockUiState();
   fetchTorData();
 
   document.getElementById('statusFilter').addEventListener('change', applyFilters);
   document.getElementById('searchInput').addEventListener('input', applyFilters);
 
-  // ปุ่มลัดคีย์บอร์ดซ้าย/ขวา สำหรับเลื่อนรูปในข้อปัจจุบัน
   document.addEventListener('keydown', (e) => {
     if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
     if (e.key === 'ArrowLeft') changeImage(-1);
     if (e.key === 'ArrowRight') changeImage(1);
   });
 });
+
+// จัดการปุ่มล็อก / ปลดล็อก
+function handleLockButtonClick() {
+  if (isEditUnlocked) {
+    // กลับไปล็อกโหมดดูอย่างเดียว
+    isEditUnlocked = false;
+    unlockedPin = '';
+    applyLockUiState();
+  } else {
+    openPinModal();
+  }
+}
+
+function openPinModal() {
+  const modal = document.getElementById('pinModal');
+  const input = document.getElementById('pinInput');
+  const err = document.getElementById('pinError');
+  err.classList.add('hidden');
+  input.value = '';
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+  setTimeout(() => input.focus(), 50);
+}
+
+function closePinModal() {
+  const modal = document.getElementById('pinModal');
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+}
+
+function verifyPin() {
+  const inputVal = document.getElementById('pinInput').value.trim();
+  const err = document.getElementById('pinError');
+
+  if (inputVal === REQUIRED_PIN) {
+    isEditUnlocked = true;
+    unlockedPin = inputVal;
+    err.classList.add('hidden');
+    closePinModal();
+    applyLockUiState();
+  } else {
+    err.classList.remove('hidden');
+  }
+}
+
+function applyLockUiState() {
+  const btnLock = document.getElementById('btnLockToggle');
+  const btnPass = document.getElementById('btnPass');
+  const btnFail = document.getElementById('btnFail');
+  const remarkInput = document.getElementById('remarkInput');
+  const btnSave = document.getElementById('btnSaveAndNext');
+  const lastUpdatedText = document.getElementById('lastUpdatedText');
+
+  if (isEditUnlocked) {
+    btnLock.className = 'inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition cursor-pointer';
+    btnLock.innerHTML = '<i class="bi bi-unlock-fill"></i> <span>ปลดล็อกแล้ว (ล็อก)</span>';
+
+    btnPass.disabled = false;
+    btnFail.disabled = false;
+    remarkInput.disabled = false;
+    btnSave.disabled = false;
+    btnPass.classList.remove('opacity-50', 'cursor-not-allowed');
+    btnFail.classList.remove('opacity-50', 'cursor-not-allowed');
+    if (lastUpdatedText) lastUpdatedText.textContent = 'ปลดล็อกโหมดแก้ไขแล้ว • กด "ผ่าน" เพื่อบันทึกและไปข้อถัดไป';
+  } else {
+    btnLock.className = 'inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition cursor-pointer';
+    btnLock.innerHTML = '<i class="bi bi-lock-fill"></i> <span>โหมดดู (ล็อก)</span>';
+
+    btnPass.disabled = true;
+    btnFail.disabled = true;
+    remarkInput.disabled = true;
+    btnSave.disabled = true;
+    btnPass.classList.add('opacity-50', 'cursor-not-allowed');
+    btnFail.classList.add('opacity-50', 'cursor-not-allowed');
+    if (lastUpdatedText) lastUpdatedText.textContent = 'โหมดดูอย่างเดียว (กดปุ่มปลดล็อกเพื่อแก้ไข)';
+  }
+}
 
 async function fetchTorData() {
   const btnRefresh = document.getElementById('btnRefresh');
@@ -124,7 +204,6 @@ function renderTorList() {
     `;
   }).join('');
 
-  // คงตำแหน่ง Scroll ของรายการ TOR ไว้ ไม่ให้เด้งกลับไปด้านบน
   container.scrollTop = prevScrollTop;
 }
 
@@ -160,12 +239,22 @@ function renderActiveTorDetail() {
 
   applyStatusButtonStyle(item.status || '');
   document.getElementById('remarkInput').value = item.remark || '';
-  document.getElementById('lastUpdatedText').textContent = item.updated_at
-    ? `บันทึกล่าสุด: ${item.updated_at}`
-    : 'กด "ผ่าน" เพื่อบันทึกและไป TOR ข้อถัดไปทันที';
+
+  const lastUpdatedText = document.getElementById('lastUpdatedText');
+  if (lastUpdatedText) {
+    if (!isEditUnlocked) {
+      lastUpdatedText.textContent = item.updated_at
+        ? `บันทึกล่าสุด: ${item.updated_at} • โหมดดูอย่างเดียว`
+        : 'โหมดดูอย่างเดียว (กดปุ่มปลดล็อกเพื่อแก้ไข)';
+    } else {
+      lastUpdatedText.textContent = item.updated_at
+        ? `บันทึกล่าสุด: ${item.updated_at}`
+        : 'กด "ผ่าน" เพื่อบันทึกและไป TOR ข้อถัดไปทันที';
+    }
+  }
 
   document.getElementById('btnPrevTor').disabled = activeFilteredIndex === 0;
-
+  applyLockUiState();
   renderCurrentImage();
 }
 
@@ -243,8 +332,11 @@ function applyStatusButtonStyle(status) {
   }
 }
 
-// กดปุ่ม "ผ่าน" -> บันทึกผล "ผ่าน" ลง Google Sheets และไป TOR ข้อถัดไปทันที โดยไม่เด้งกลับไปที่รายการ TOR
 async function selectStatus(status) {
+  if (!isEditUnlocked) {
+    openPinModal();
+    return;
+  }
   if (isSaving) return;
 
   if (status === 'ไม่ผ่าน') {
@@ -266,6 +358,7 @@ async function selectStatus(status) {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({
+        pin: unlockedPin,
         rowIndex: item.rowIndex,
         status: 'ผ่าน',
         remark: remark
@@ -300,6 +393,10 @@ async function selectStatus(status) {
 }
 
 async function saveCurrentAndNext() {
+  if (!isEditUnlocked) {
+    openPinModal();
+    return;
+  }
   if (isSaving) return;
 
   const item = filteredTorItems[activeFilteredIndex];
@@ -321,6 +418,7 @@ async function saveCurrentAndNext() {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({
+        pin: unlockedPin,
         rowIndex: item.rowIndex,
         status: selectedStatus,
         remark: remark
