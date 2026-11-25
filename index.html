@@ -33,7 +33,7 @@
     </div>
 
     <div class="flex items-center gap-2 sm:gap-3 shrink-0">
-      <!-- Progress Bar (Visible on all screens, compact on mobile) -->
+      <!-- Progress Bar -->
       <div class="flex items-center gap-2 bg-slate-50 border border-slate-200/80 px-2.5 py-1 rounded-full">
         <span class="hidden sm:inline text-xs text-slate-600">ความคืบหน้า</span>
         <div class="w-16 sm:w-24 h-2 bg-slate-200 rounded-full overflow-hidden">
@@ -41,6 +41,12 @@
         </div>
         <span id="progressPercent" class="font-prompt text-xs font-semibold text-slate-900">0%</span>
       </div>
+
+      <!-- Lock / Unlock Edit Mode Button -->
+      <button id="btnLockToggle" onclick="handleLockButtonClick()"
+        class="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition cursor-pointer">
+        <i class="bi bi-lock-fill"></i> <span>โหมดดู (ล็อก)</span>
+      </button>
 
       <button id="btnRefresh" onclick="fetchTorData()" class="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 transition cursor-pointer">
         <i class="bi bi-arrow-clockwise"></i> <span class="hidden sm:inline">รีเฟรช</span>
@@ -158,7 +164,7 @@
           <!-- Remark Input -->
           <div class="md:col-span-8">
             <input type="text" id="remarkInput" placeholder="บันทึกข้อสังเกตหรือสิ่งที่ต้องแก้ไข..."
-              class="w-full px-3.5 py-2.5 sm:py-2 text-xs sm:text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+              class="w-full px-3.5 py-2.5 sm:py-2 text-xs sm:text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 disabled:bg-slate-100 disabled:text-slate-400">
           </div>
         </div>
 
@@ -170,11 +176,11 @@
           </button>
 
           <span id="lastUpdatedText" class="hidden xl:inline text-[11px] text-slate-400 truncate">
-            พร้อมบันทึกข้อมูลลง Google Sheets
+            โหมดดูอย่างเดียว (กดปุ่มปลดล็อกเพื่อแก้ไข)
           </span>
 
           <button type="button" id="btnSaveAndNext" onclick="saveCurrentAndNext()"
-            class="inline-flex items-center justify-center gap-1.5 py-2 px-4 sm:px-5 rounded-xl bg-slate-900 text-white text-xs font-medium hover:bg-slate-800 transition shadow-xs cursor-pointer">
+            class="inline-flex items-center justify-center gap-1.5 py-2 px-4 sm:px-5 rounded-xl bg-slate-900 text-white text-xs font-medium hover:bg-slate-800 transition shadow-xs cursor-pointer disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed">
             <span id="saveBtnText">บันทึกและไปข้อถัดไป</span> <i class="bi bi-arrow-right"></i>
           </button>
         </div>
@@ -183,6 +189,32 @@
     </section>
 
   </main>
+
+  <!-- PIN Unlock Modal -->
+  <div id="pinModal" class="fixed inset-0 z-50 bg-black/50 hidden items-center justify-center p-4" onclick="closePinModal()">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-xl w-full max-w-sm p-5" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2">
+          <span class="w-8 h-8 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center">
+            <i class="bi bi-key-fill"></i>
+          </span>
+          <h3 class="font-prompt font-semibold text-base text-slate-900">ปลดล็อกโหมดแก้ไข</h3>
+        </div>
+        <button onclick="closePinModal()" class="text-slate-400 hover:text-slate-600 cursor-pointer">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <p class="text-xs text-slate-500 mb-3">กรอกรหัสผ่านเพื่อเปิดสิทธิ์แก้ไขสถานะ ผ่าน/ไม่ผ่าน และหมายเหตุ</p>
+      <input type="password" id="pinInput" placeholder="กรอกรหัสผ่าน..."
+        onkeydown="if(event.key==='Enter') verifyPin()"
+        class="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 mb-2">
+      <div id="pinError" class="text-xs text-rose-600 mb-3 hidden">รหัสผ่านไม่ถูกต้อง</div>
+      <div class="flex justify-end gap-2">
+        <button onclick="closePinModal()" class="px-4 py-2 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 cursor-pointer">ยกเลิก</button>
+        <button onclick="verifyPin()" class="px-4 py-2 rounded-xl text-xs font-medium bg-blue-600 text-white hover:bg-blue-700 cursor-pointer">ปลดล็อก</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Fullscreen Image Zoom Modal -->
   <div id="imageModal" class="fixed inset-0 z-50 bg-black/85 hidden items-center justify-center p-3 sm:p-4" onclick="closeModal()">
